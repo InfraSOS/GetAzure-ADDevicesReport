@@ -11,20 +11,20 @@ Param
     [switch]$ManagedDevice,
     [switch]$DevicesWithBitLockerKey
 )
-$MsGraphBetaModule =  Get-Module Microsoft.Graph.Beta -ListAvailable
-if($MsGraphBetaModule -eq $null)
+$MsGraphModule =  Get-Module Microsoft.Graph -ListAvailable
+if($MsGraphModule -eq $null)
 { 
-    Write-host "Important: Microsoft Graph Beta module is unavailable. It is mandatory to have this module installed in the system to run the script successfully." 
-    $confirm = Read-Host Are you sure you want to install Microsoft Graph Beta module? [Y] Yes [N] No  
+    Write-host "Important: Microsoft Graph module is unavailable. It is mandatory to have this module installed in the system to run the script successfully." 
+    $confirm = Read-Host Are you sure you want to install Microsoft Graph module? [Y] Yes [N] No  
     if($confirm -match "[yY]") 
     { 
-        Write-host "Installing Microsoft Graph Beta module..."
-        Install-Module Microsoft.Graph.Beta -Scope CurrentUser -AllowClobber
-        Write-host "Microsoft Graph Beta module is installed in the machine successfully" -ForegroundColor Magenta 
+        Write-host "Installing Microsoft Graph module..."
+        Install-Module Microsoft.Graph -Scope CurrentUser -AllowClobber
+        Write-host "Microsoft Graph module is installed in the machine successfully" -ForegroundColor Magenta 
     } 
     else
     { 
-        Write-host "Exiting. `nNote: Microsoft Graph Beta module must be available in your system to run the script" -ForegroundColor Red
+        Write-host "Exiting. `nNote: Microsoft Graph module must be available in your system to run the script" -ForegroundColor Red
         Exit 
     } 
 }
@@ -48,7 +48,7 @@ else
         Exit
     }
 }
-Write-Host "Microsoft Graph Beta Powershell module is connected successfully" -ForegroundColor Green
+Write-Host "Microsoft Graph Powershell module is connected successfully" -ForegroundColor Green
 Write-Host "`nNote: If you encounter module related conflicts, run the script in a fresh Powershell window."
 function CloseConnection
 {
@@ -58,7 +58,7 @@ function CloseConnection
 $OutputCsv =".\AzureDeviceReport_$((Get-Date -format MMM-dd` hh-mm-ss` tt).ToString()).csv" 
 $Report=""
 $FilterCondition = @()
-$DeviceInfo = Get-MgBetaDevice -All
+$DeviceInfo = Get-MgDevice -All
 if($DeviceInfo -eq $null)
 {
     Write-Host "You have no devices enrolled in your Azure AD" -ForegroundColor Red
@@ -88,7 +88,7 @@ Foreach($Device in $DeviceInfo){
     {
         $BitLockerKeyIsPresent = "No"
         try {
-            $BitLockerKeys = Get-MgBetaInformationProtectionBitlockerRecoveryKey -Filter "DeviceId eq '$($Device.DeviceId)'" -ErrorAction SilentlyContinue -ErrorVariable Err
+            $BitLockerKeys = Get-MgInformationProtectionBitlockerRecoveryKey -Filter "DeviceId eq '$($Device.DeviceId)'" -ErrorAction SilentlyContinue -ErrorVariable Err
             if($Err -ne $null)
             {
                 Write-Host $Err -ForegroundColor Red
@@ -123,9 +123,9 @@ Foreach($Device in $DeviceInfo){
             continue
         }
     }
-    $DeviceOwners = Get-MgBetaDeviceRegisteredOwner -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
-    $DeviceUsers = Get-MgBetaDeviceRegisteredUser -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
-    $DeviceMemberOf = Get-MgBetaDeviceMemberOf -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
+    $DeviceOwners = Get-MgDeviceRegisteredOwner -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
+    $DeviceUsers = Get-MgDeviceRegisteredUser -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
+    $DeviceMemberOf = Get-MgDeviceMemberOf -DeviceId $Device.Id -All |Select-Object -ExpandProperty AdditionalProperties
     $Groups = $DeviceMemberOf|Where-Object {$_.'@odata.type' -eq '#microsoft.graph.group'}
     $AdministrativeUnits = $DeviceMemberOf|Where-Object{$_.'@odata.type' -eq '#microsoft.graph.administrativeUnit'}
     if($Device.TrustType -eq "Workplace")
